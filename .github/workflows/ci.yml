@@ -24,18 +24,16 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        working-directory: libraries/js
         run: npm ci
 
       - name: Run tests
-        working-directory: libraries/js
         run: npm test
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         if: matrix.node-version == '20.x'
         with:
-          files: ./libraries/js/coverage/lcov.info
+          files: ./coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
 
@@ -53,11 +51,9 @@ jobs:
           node-version: "20.x"
 
       - name: Install dependencies
-        working-directory: libraries/js
         run: npm ci
 
       - name: Run ESLint
-        working-directory: libraries/js
         run: npm run lint
 
   format:
@@ -74,11 +70,9 @@ jobs:
           node-version: "20.x"
 
       - name: Install dependencies
-        working-directory: libraries/js
         run: npm ci
 
       - name: Check formatting
-        working-directory: libraries/js
         run: npm run format:check
 
   build:
@@ -95,15 +89,12 @@ jobs:
           node-version: "20.x"
 
       - name: Install dependencies
-        working-directory: libraries/js
         run: npm ci
 
       - name: Build
-        working-directory: libraries/js
         run: npm run build
 
       - name: Check build output
-        working-directory: libraries/js
         run: |
           if [ ! -d "dist" ]; then
             echo "Error: dist directory not found"
