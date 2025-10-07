@@ -62,12 +62,6 @@ logger.info("User logged in successfully", {
   username: "john_doe",
   ip: "192.168.1.100",
 });
-
-// Cleanup on shutdown
-process.on("SIGINT", async () => {
-  await logger.shutdown();
-  process.exit(0);
-});
 ```
 
 ## Usage Examples
@@ -106,9 +100,6 @@ const sessionLogger = logger.withContext({
 sessionLogger.info("Processing request", {
   action: "purchase",
 });
-
-// Cleanup
-await logger.shutdown();
 ```
 
 ### 2. Winston Integration
