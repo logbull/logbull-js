@@ -1,0 +1,39 @@
+# Source files (only publish dist/)
+src/
+tests/
+test/
+*.test.ts
+*.spec.ts
+
+# Config files
+tsconfig.json
+jest.config.js
+.eslintrc.js
+.eslintrc.json
+.prettierrc
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Development
+coverage/
+.nyc_output/
+node_modules/
+
+# Documentation (if you add it later)
+docs/
+
+# Misc
+.DS_Store
+*.log
+.env
+.env.*
+
