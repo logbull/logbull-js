@@ -2,6 +2,7 @@
  * Winston transport integration for LogBull
  */
 
+import Transport from "winston-transport";
 import type { Config, LogLevel, LogEntry, LogFields } from "../core/types";
 import { Sender } from "../core/sender";
 import { generateUniqueTimestamp } from "../core/timestamp";
@@ -11,11 +12,12 @@ import { formatMessage, ensureFields } from "../internal/formatting";
 /**
  * Winston transport for LogBull
  */
-export class LogBullTransport {
+export class LogBullTransport extends Transport {
   private config: Config;
   private sender: Sender;
 
   constructor(config: Config) {
+    super();
     // Trim and set defaults
     this.config = {
       projectId: config.projectId.trim(),

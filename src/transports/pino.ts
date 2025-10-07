@@ -2,6 +2,7 @@
  * Pino transport integration for LogBull
  */
 
+import { Writable } from "stream";
 import type { Config, LogLevel, LogEntry, LogFields } from "../core/types";
 import { Sender } from "../core/sender";
 import { generateUniqueTimestamp } from "../core/timestamp";
@@ -53,13 +54,15 @@ export class LogBullPinoTransport {
   /**
    * Pino transform function
    * Called by Pino for each log entry
-   * @param chunk - Pino log chunk (can be string or object)
+   * @param chunk - Pino log chunk (can be string, Buffer, or object)
    */
   transform(chunk: unknown): void {
     try {
-      // Parse Pino log object (it comes as a JSON string or object)
+      // Parse Pino log object (it comes as a JSON string, Buffer, or object)
       let logObj: PinoLogObject;
-      if (typeof chunk === "string") {
+      if (Buffer.isBuffer(chunk)) {
+        logObj = JSON.parse(chunk.toString("utf8")) as PinoLogObject;
+      } else if (typeof chunk === "string") {
         logObj = JSON.parse(chunk) as PinoLogObject;
       } else {
         logObj = chunk as PinoLogObject;
@@ -155,26 +158,28 @@ export class LogBullPinoTransport {
 }
 
 /**
- * Stream interface for Pino transport
- */
-interface PinoStream {
-  on(event: string, handler: (chunk: unknown) => void): void;
-}
-
-/**
- * Create a Pino transport function
+ * Create a Pino transport stream
  * This is the recommended way to use LogBull with Pino
  * @param config - LogBull configuration
- * @returns Pino transport function
+ * @returns Pino writable stream
  */
-export function createPinoTransport(config: Config) {
+export function createPinoTransport(config: Config): Writable {
   const transport = new LogBullPinoTransport(config);
 
-  return (source: PinoStream) => {
-    source.on("data", (chunk: unknown) => {
-      transport.transform(chunk);
-    });
-
-    return source;
-  };
+  return new Writable({
+    write(chunk: unknown, _encoding: BufferEncoding, callback: (error?: Error | null) => void) {
+      try {
+        transport.transform(chunk);
+        callback();
+      } catch (error) {
+        callback(error instanceof Error ? error : new Error(String(error)));
+      }
+    },
+    final(callback: (error?: Error | null) => void) {
+      transport
+        .shutdown()
+        .then(() => callback())
+        .catch((error) => callback(error instanceof Error ? error : new Error(String(error))));
+    },
+  });
 }
