@@ -20,8 +20,6 @@ A JavaScript/TypeScript library for sending logs to [LogBull](https://github.com
   - [1. Standalone Logger](#1-standalone-logger)
   - [2. Winston Integration](#2-winston-integration)
   - [3. Pino Integration](#3-pino-integration)
-  - [4. Express.js Integration](#4-expressjs-integration)
-  - [5. Fastify Integration](#5-fastify-integration)
 - [Configuration Options](#configuration-options)
 - [API Reference](#api-reference)
 - [Error Handling](#error-handling)
@@ -34,6 +32,7 @@ A JavaScript/TypeScript library for sending logs to [LogBull](https://github.com
 - **Multiple integration options**: Standalone logger, Winston transport, and Pino transport
 - **Context support**: Attach persistent context to logs (session_id, user_id, etc.)
 - **Type-safe**: Full TypeScript support with comprehensive type definitions
+- **Framework integration**: Easy integration with Express.js, Fastify, and other Node.js frameworks
 
 ## Installation
 
@@ -189,91 +188,7 @@ requestLogger.info("Request started");
 requestLogger.info({ duration_ms: 250 }, "Request completed");
 ```
 
-### 4. Express.js Integration
-
-```typescript
-import express from "express";
-import winston from "winston";
-import { LogBullTransport } from "logbull";
-
-const app = express();
-
-// Setup logger
-const logger = winston.createLogger({
-  transports: [
-    new LogBullTransport({
-      host: "http://LOGBULL_HOST",
-      projectId: "LOGBULL_PROJECT_ID",
-    }),
-  ],
-});
-
-// Request logging middleware
-app.use((req, res, next) => {
-  const requestLogger = logger.child({
-    request_id: crypto.randomUUID(),
-    method: req.method,
-    path: req.path,
-  });
-
-  (req as any).logger = requestLogger;
-  requestLogger.info("Request received");
-  next();
-});
-
-// Route handlers
-app.get("/api/users/:id", async (req, res) => {
-  try {
-    (req as any).logger.info("Fetching user", { user_id: req.params.id });
-    const user = await getUserById(req.params.id);
-    res.json(user);
-  } catch (error) {
-    (req as any).logger.error("Failed to fetch user", {
-      user_id: req.params.id,
-      error: (error as Error).message,
-    });
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-app.listen(3000);
-```
-
-### 5. Fastify Integration
-
-```typescript
-import Fastify from "fastify";
-import pino from "pino";
-import { createPinoTransport } from "logbull";
-
-const transport = createPinoTransport({
-  host: "http://LOGBULL_HOST",
-  projectId: "LOGBULL_PROJECT_ID",
-});
-
-const logger = pino({ level: "info" }, transport);
-
-const fastify = Fastify({
-  logger: logger,
-});
-
-fastify.get("/api/users/:id", async (request, reply) => {
-  request.log.info({ user_id: request.params.id }, "Fetching user");
-
-  try {
-    const user = await getUserById(request.params.id);
-    return user;
-  } catch (error) {
-    request.log.error(
-      { user_id: request.params.id, error: (error as Error).message },
-      "Failed to fetch user"
-    );
-    reply.status(500).send({ error: "Internal server error" });
-  }
-});
-
-await fastify.listen({ port: 3000 });
-```
+## Configuration Options
 
 ### Available Log Levels
 
