@@ -161,12 +161,14 @@ export class LogBullPinoTransport {
  * Create a Pino transport stream
  * This is the recommended way to use LogBull with Pino
  * @param config - LogBull configuration
- * @returns Pino writable stream
+ * @returns Pino writable stream with transport reference
  */
-export function createPinoTransport(config: Config): Writable {
+export function createPinoTransport(
+  config: Config
+): Writable & { transport: LogBullPinoTransport } {
   const transport = new LogBullPinoTransport(config);
 
-  return new Writable({
+  const stream = new Writable({
     write(chunk: unknown, _encoding: BufferEncoding, callback: (error?: Error | null) => void) {
       try {
         transport.transform(chunk);
@@ -182,4 +184,9 @@ export function createPinoTransport(config: Config): Writable {
         .catch((error) => callback(error instanceof Error ? error : new Error(String(error))));
     },
   });
+
+  // Attach transport reference for manual control
+  (stream as any).transport = transport;
+
+  return stream as Writable & { transport: LogBullPinoTransport };
 }

@@ -1,20 +1,36 @@
 /**
  * Timestamp generator with monotonic guarantees
- * Ensures unique, monotonically increasing timestamps
+ * Ensures unique, monotonically increasing timestamps with real nanosecond precision
  */
 
 let lastTimestampNs = 0;
+let baselineWallClockMs = 0;
+let baselineHrtimeNs: bigint | null = null;
 
 /**
- * Generate a unique RFC3339Nano timestamp
+ * Generate a unique RFC3339Nano timestamp (UTC time in RFC3339Nano format)
+ * Uses Date.now() for current UTC time and process.hrtime.bigint() for nanosecond precision
  * Ensures monotonic ordering by incrementing if the same timestamp is generated
  */
 export function generateUniqueTimestamp(): string {
-  // Use process.hrtime.bigint() for high-resolution time in Node.js
-  const currentNs = process.hrtime.bigint();
-  const currentNsNumber = Number(currentNs);
+  // Initialize baseline on first call to sync wall-clock time with high-resolution timer
+  if (baselineHrtimeNs === null) {
+    baselineWallClockMs = Date.now();
+    baselineHrtimeNs = process.hrtime.bigint();
+  }
 
-  // Ensure monotonic ordering
+  // Get current high-resolution time
+  const currentHrtimeNs = process.hrtime.bigint();
+
+  // Calculate elapsed time in nanoseconds since baseline (real nanosecond precision)
+  const elapsedNs = Number(currentHrtimeNs - baselineHrtimeNs);
+
+  // Calculate current wall-clock time in nanoseconds
+  // Start with baseline milliseconds converted to nanoseconds, then add high-res elapsed time
+  const baselineNs = baselineWallClockMs * 1_000_000;
+  const currentNsNumber = baselineNs + elapsedNs;
+
+  // Ensure monotonic ordering (each timestamp must be unique and increasing)
   if (currentNsNumber <= lastTimestampNs) {
     lastTimestampNs = lastTimestampNs + 1;
   } else {

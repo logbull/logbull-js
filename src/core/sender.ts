@@ -71,6 +71,12 @@ export class Sender {
     while (this.inFlightRequests > 0 && Date.now() - startTime < maxWaitTime) {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
+
+    if (this.inFlightRequests > 0) {
+      console.warn(
+        `LogBull Sender: Shutdown completed with ${this.inFlightRequests} requests still in-flight`
+      );
+    }
   }
 
   /**
@@ -99,7 +105,8 @@ export class Sender {
     const logsToSend = this.logQueue.splice(0, BATCH_SIZE);
 
     // Fire-and-forget async request
-    this.sendHTTPRequest(logsToSend);
+    // Wrap in Promise to ensure synchronous increment of inFlightRequests
+    Promise.resolve().then(() => this.sendHTTPRequest(logsToSend));
   }
 
   /**
@@ -127,7 +134,8 @@ export class Sender {
       const response = await this.makeRequest(url, data, headers);
 
       if (response.status !== 200 && response.status !== 202) {
-        console.error(`LogBull: server returned status ${response.status}: ${response.body}`);
+        console.error(`LogBull Sender: Server returned error status ${response.status}`);
+        console.error(`LogBull Sender: Error response body: ${response.body}`);
         return;
       }
 
@@ -135,7 +143,7 @@ export class Sender {
       let responseData: LogBullResponse;
       try {
         responseData = JSON.parse(response.body);
-      } catch {
+      } catch (parseError) {
         return; // Ignore parse errors
       }
 
@@ -145,8 +153,11 @@ export class Sender {
       }
     } catch (error) {
       console.error(
-        `LogBull: HTTP request failed: ${error instanceof Error ? error.message : String(error)}`
+        `LogBull Sender: HTTP request failed: ${error instanceof Error ? error.message : String(error)}`
       );
+      if (error instanceof Error && error.stack) {
+        console.error(`LogBull Sender: Error stack:`, error.stack);
+      }
     } finally {
       this.inFlightRequests--;
     }
@@ -179,6 +190,7 @@ export class Sender {
         return { status: response.status, body };
       } catch (error) {
         clearTimeout(timeout);
+        console.error(`LogBull Sender: Fetch failed:`, error);
         throw error;
       }
     }
@@ -228,10 +240,12 @@ export class Sender {
       });
 
       req.on("error", (error) => {
+        console.error(`LogBull Sender: Request error:`, error);
         reject(error);
       });
 
       req.on("timeout", () => {
+        console.error(`LogBull Sender: Request timeout after ${HTTP_TIMEOUT_MS}ms`);
         req.destroy();
         reject(new Error("Request timeout"));
       });

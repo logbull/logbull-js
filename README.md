@@ -161,16 +161,13 @@ import pino from "pino";
 import { createPinoTransport } from "logbull";
 
 // Create Pino logger with LogBull transport
-const logger = pino(
-  {
-    level: "info",
-  },
-  createPinoTransport({
-    host: "http://LOGBULL_HOST",
-    projectId: "LOGBULL_PROJECT_ID",
-    apiKey: "YOUR_API_KEY",
-  })
-);
+const transport = createPinoTransport({
+  host: "http://LOGBULL_HOST",
+  projectId: "LOGBULL_PROJECT_ID",
+  apiKey: "YOUR_API_KEY",
+});
+
+const logger = pino({ level: "info" }, transport);
 
 // Use standard Pino logging
 logger.info(
@@ -258,15 +255,12 @@ import Fastify from "fastify";
 import pino from "pino";
 import { createPinoTransport } from "logbull";
 
-const logger = pino(
-  {
-    level: "info",
-  },
-  createPinoTransport({
-    host: "http://LOGBULL_HOST",
-    projectId: "LOGBULL_PROJECT_ID",
-  })
-);
+const transport = createPinoTransport({
+  host: "http://LOGBULL_HOST",
+  projectId: "LOGBULL_PROJECT_ID",
+});
+
+const logger = pino({ level: "info" }, transport);
 
 const fastify = Fastify({
   logger: logger,
@@ -288,19 +282,6 @@ fastify.get("/api/users/:id", async (request, reply) => {
 });
 
 await fastify.listen({ port: 3000 });
-```
-
-## Configuration Options
-
-### Config Parameters
-
-```typescript
-interface Config {
-  projectId: string; // Required: Your LogBull project ID (UUID format)
-  host: string; // Required: LogBull server URL
-  apiKey?: string; // Optional: API key for authentication
-  logLevel?: LogLevel; // Optional: Minimum log level (default: INFO)
-}
 ```
 
 ### Available Log Levels
