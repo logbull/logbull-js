@@ -22,20 +22,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
-          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
+        working-directory: libraries/js
         run: npm ci
 
       - name: Run tests
+        working-directory: libraries/js
         run: npm test
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         if: matrix.node-version == '20.x'
         with:
-          files: ./coverage/lcov.info
+          files: ./libraries/js/coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
 
@@ -51,13 +51,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-          cache: "npm"
-          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
+        working-directory: libraries/js
         run: npm ci
 
       - name: Run ESLint
+        working-directory: libraries/js
         run: npm run lint
 
   format:
@@ -72,13 +72,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-          cache: "npm"
-          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
+        working-directory: libraries/js
         run: npm ci
 
       - name: Check formatting
+        working-directory: libraries/js
         run: npm run format:check
 
   build:
@@ -93,16 +93,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-          cache: "npm"
-          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
+        working-directory: libraries/js
         run: npm ci
 
       - name: Build
+        working-directory: libraries/js
         run: npm run build
 
       - name: Check build output
+        working-directory: libraries/js
         run: |
           if [ ! -d "dist" ]; then
             echo "Error: dist directory not found"
