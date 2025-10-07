@@ -1,128 +1,119 @@
 name: CI
 
 on:
-    push:
-        branches: [main, master, develop]
-    pull_request:
-        branches: [main, master]
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
 
 jobs:
-    test:
-        name: Test
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                node-version: ["16.x", "18.x", "20.x"]
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ["16.x", "18.x", "20.x"]
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Setup Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v4
-              with:
-                  node-version: ${{ matrix.node-version }}
-                  cache: "npm"
-                  cache-dependency-path: libraries/js/package-lock.json
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: package-lock.json
 
-            - name: Install dependencies
-              working-directory: libraries/js
-              run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-            - name: Run tests
-              working-directory: libraries/js
-              run: npm test
+      - name: Run tests
+        run: npm test
 
-            - name: Upload coverage
-              uses: codecov/codecov-action@v4
-              if: matrix.node-version == '20.x'
-              with:
-                  files: ./libraries/js/coverage/lcov.info
-                  flags: unittests
-                  name: codecov-umbrella
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: matrix.node-version == '20.x'
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
 
-    lint:
-        name: Lint
-        runs-on: ubuntu-latest
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "20.x"
-                  cache: "npm"
-                  cache-dependency-path: libraries/js/package-lock.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
 
-            - name: Install dependencies
-              working-directory: libraries/js
-              run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-            - name: Run ESLint
-              working-directory: libraries/js
-              run: npm run lint
+      - name: Run ESLint
+        run: npm run lint
 
-    format:
-        name: Format Check
-        runs-on: ubuntu-latest
+  format:
+    name: Format Check
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "20.x"
-                  cache: "npm"
-                  cache-dependency-path: libraries/js/package-lock.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
 
-            - name: Install dependencies
-              working-directory: libraries/js
-              run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-            - name: Check formatting
-              working-directory: libraries/js
-              run: npm run format:check
+      - name: Check formatting
+        run: npm run format:check
 
-    build:
-        name: Build
-        runs-on: ubuntu-latest
+  build:
+    name: Build
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "20.x"
-                  cache: "npm"
-                  cache-dependency-path: libraries/js/package-lock.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
 
-            - name: Install dependencies
-              working-directory: libraries/js
-              run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-            - name: Build
-              working-directory: libraries/js
-              run: npm run build
+      - name: Build
+        run: npm run build
 
-            - name: Check build output
-              working-directory: libraries/js
-              run: |
-                  if [ ! -d "dist" ]; then
-                    echo "Error: dist directory not found"
-                    exit 1
-                  fi
-                  if [ ! -f "dist/index.js" ]; then
-                    echo "Error: dist/index.js not found"
-                    exit 1
-                  fi
-                  if [ ! -f "dist/index.d.ts" ]; then
-                    echo "Error: dist/index.d.ts not found"
-                    exit 1
-                  fi
-                  echo "Build successful!"
+      - name: Check build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "Error: dist directory not found"
+            exit 1
+          fi
+          if [ ! -f "dist/index.js" ]; then
+            echo "Error: dist/index.js not found"
+            exit 1
+          fi
+          if [ ! -f "dist/index.d.ts" ]; then
+            echo "Error: dist/index.d.ts not found"
+            exit 1
+          fi
+          echo "Build successful!"
