@@ -61,6 +61,10 @@ logger.info("User logged in successfully", {
   username: "john_doe",
   ip: "192.168.1.100",
 });
+
+// Ensure all logs are sent before exiting
+logger.flush();
+await new Promise((resolve) => setTimeout(resolve, 5000));
 ```
 
 ## Usage Examples
@@ -99,6 +103,10 @@ const sessionLogger = logger.withContext({
 sessionLogger.info("Processing request", {
   action: "purchase",
 });
+
+// Ensure all logs are sent before exiting
+logger.flush();
+await new Promise((resolve) => setTimeout(resolve, 5000));
 ```
 
 ### 2. Winston Integration
@@ -142,6 +150,10 @@ const requestLogger = logger.child({
 
 requestLogger.info("Request started");
 requestLogger.info("Request completed", { duration_ms: 250 });
+
+// Ensure all logs are sent before exiting
+logger.flush();
+await new Promise((resolve) => setTimeout(resolve, 5000));
 ```
 
 ### 3. Pino Integration
@@ -186,6 +198,10 @@ const requestLogger = logger.child({
 
 requestLogger.info("Request started");
 requestLogger.info({ duration_ms: 250 }, "Request completed");
+
+// Ensure all logs are sent before exiting
+logger.flush();
+await new Promise((resolve) => setTimeout(resolve, 5000));
 ```
 
 ## Configuration Options
