@@ -62,9 +62,10 @@ logger.info("User logged in successfully", {
   ip: "192.168.1.100",
 });
 
-// Ensure all logs are sent before exiting
+// We need to wait a bit in short-living scripts when logs
+// received by Log Bull. This is not needed in production
 logger.flush();
-await new Promise((resolve) => setTimeout(resolve, 5000));
+await new Promise((resolve) => setTimeout(resolve, 3000));
 ```
 
 ## Usage Examples
@@ -104,9 +105,10 @@ sessionLogger.info("Processing request", {
   action: "purchase",
 });
 
-// Ensure all logs are sent before exiting
+// We need to wait a bit in short-living scripts when logs
+// received by Log Bull. This is not needed in production
 logger.flush();
-await new Promise((resolve) => setTimeout(resolve, 5000));
+await new Promise((resolve) => setTimeout(resolve, 3000));
 ```
 
 ### 2. Winston Integration
@@ -151,9 +153,10 @@ const requestLogger = logger.child({
 requestLogger.info("Request started");
 requestLogger.info("Request completed", { duration_ms: 250 });
 
-// Ensure all logs are sent before exiting
+// We need to wait a bit in short-living scripts when logs
+// received by Log Bull. This is not needed in production
 logger.flush();
-await new Promise((resolve) => setTimeout(resolve, 5000));
+await new Promise((resolve) => setTimeout(resolve, 3000));
 ```
 
 ### 3. Pino Integration
@@ -199,9 +202,10 @@ const requestLogger = logger.child({
 requestLogger.info("Request started");
 requestLogger.info({ duration_ms: 250 }, "Request completed");
 
-// Ensure all logs are sent before exiting
+// We need to wait a bit in short-living scripts when logs
+// received by Log Bull. This is not needed in production
 logger.flush();
-await new Promise((resolve) => setTimeout(resolve, 5000));
+await new Promise((resolve) => setTimeout(resolve, 3000));
 ```
 
 ## Configuration Options

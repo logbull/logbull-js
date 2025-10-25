@@ -28,27 +28,41 @@ interface PinoLogObject {
  */
 export class LogBullPinoTransport {
   private config: Config;
-  private sender: Sender;
+  private sender: Sender | null;
 
-  constructor(config: Config) {
+  constructor(config: Config = {}) {
     // Trim and set defaults
+    const projectId = config.projectId?.trim();
+    const host = config.host?.trim();
+
     this.config = {
-      projectId: config.projectId.trim(),
-      host: config.host.trim(),
+      projectId: projectId,
+      host: host,
       apiKey: config.apiKey?.trim(),
       logLevel: config.logLevel || ("INFO" as LogLevel),
     };
 
+    // Check if credentials are provided
+    if (!projectId || !host) {
+      // No credentials: do nothing (Pino will print)
+      console.log(
+        "LogBull: No credentials provided for Pino transport. " +
+          "Transport is disabled. Logs will not be sent to LogBull server."
+      );
+      this.sender = null;
+      return;
+    }
+
     // Validate configuration
-    validateProjectId(this.config.projectId);
-    validateHostURL(this.config.host);
+    validateProjectId(projectId);
+    validateHostURL(host);
 
     if (this.config.apiKey) {
       validateAPIKey(this.config.apiKey);
     }
 
     // Initialize sender
-    this.sender = new Sender(this.config);
+    this.sender = new Sender(this.config as Required<Pick<Config, "projectId" | "host">> & Config);
   }
 
   /**
@@ -57,6 +71,11 @@ export class LogBullPinoTransport {
    * @param chunk - Pino log chunk (can be string, Buffer, or object)
    */
   transform(chunk: unknown): void {
+    // If transport is disabled, do nothing
+    if (!this.sender) {
+      return;
+    }
+
     try {
       // Parse Pino log object (it comes as a JSON string, Buffer, or object)
       let logObj: PinoLogObject;
@@ -111,14 +130,18 @@ export class LogBullPinoTransport {
    * Flush pending logs
    */
   flush(): void {
-    this.sender.flush();
+    if (this.sender) {
+      this.sender.flush();
+    }
   }
 
   /**
    * Shutdown and wait for logs to be sent
    */
   async shutdown(): Promise<void> {
-    await this.sender.shutdown();
+    if (this.sender) {
+      await this.sender.shutdown();
+    }
   }
 
   /**

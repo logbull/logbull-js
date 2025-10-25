@@ -18,29 +18,45 @@ import { formatMessage, ensureFields, mergeFields } from "../internal/formatting
 
 export class LogBullLogger {
   private config: Config;
-  private sender: Sender;
+  private sender: Sender | null;
   private minLevel: LogLevel;
   private context: LogFields;
 
-  constructor(config: Config) {
+  constructor(config: Config = {}) {
     // Trim and set defaults
+    const projectId = config.projectId?.trim();
+    const host = config.host?.trim();
+
     this.config = {
-      projectId: config.projectId.trim(),
-      host: config.host.trim(),
+      projectId: projectId,
+      host: host,
       apiKey: config.apiKey?.trim(),
       logLevel: config.logLevel || ("INFO" as LogLevel),
     };
 
+    // Check if credentials are provided
+    if (!projectId || !host) {
+      // Console-only mode: no credentials provided
+      console.log(
+        "LogBull: No credentials provided. Running in console-only mode. " +
+          "Logs will only be printed to the console and not sent to LogBull server."
+      );
+      this.sender = null;
+      this.minLevel = this.config.logLevel!;
+      this.context = {};
+      return;
+    }
+
     // Validate configuration
-    validateProjectId(this.config.projectId);
-    validateHostURL(this.config.host);
+    validateProjectId(projectId);
+    validateHostURL(host);
 
     if (this.config.apiKey) {
       validateAPIKey(this.config.apiKey);
     }
 
     // Initialize sender and context
-    this.sender = new Sender(this.config);
+    this.sender = new Sender(this.config as Required<Pick<Config, "projectId" | "host">> & Config);
     this.minLevel = this.config.logLevel!;
     this.context = {};
   }
@@ -99,14 +115,18 @@ export class LogBullLogger {
    * Force send all queued logs immediately
    */
   flush(): void {
-    this.sender.flush();
+    if (this.sender) {
+      this.sender.flush();
+    }
   }
 
   /**
    * Stop processing and send remaining logs
    */
   async shutdown(): Promise<void> {
-    await this.sender.shutdown();
+    if (this.sender) {
+      await this.sender.shutdown();
+    }
   }
 
   /**
@@ -143,8 +163,10 @@ export class LogBullLogger {
     // Print to console
     this.printToConsole(entry);
 
-    // Send to LogBull
-    this.sender.addLog(entry);
+    // Only send to LogBull server if not in console-only mode
+    if (this.sender) {
+      this.sender.addLog(entry);
+    }
   }
 
   /**

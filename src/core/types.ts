@@ -25,10 +25,10 @@ export type LogFields = Record<string, LogFieldValue>;
  * Configuration for LogBull logger
  */
 export interface Config {
-  /** LogBull project ID (UUID format) */
-  projectId: string;
-  /** LogBull server URL (e.g., http://localhost:4005) */
-  host: string;
+  /** LogBull project ID (UUID format) - optional for console-only mode */
+  projectId?: string;
+  /** LogBull server URL (e.g., http://localhost:4005) - optional for console-only mode */
+  host?: string;
   /** Optional API key for authentication */
   apiKey?: string;
   /** Minimum log level to process (default: INFO) */
